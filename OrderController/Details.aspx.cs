@@ -22,7 +22,7 @@ namespace OrderController
 
                 Order order = OrderList.Find(o => o.id == id);
 
-                if (!Page.IsPostBack)
+                if (!IsPostBack)
                 {
                     tbProvider.Text = order.providerName;
                     tbDescription.Text = order.description;
@@ -47,7 +47,7 @@ namespace OrderController
 
                     Button undo = new Button();
                     undo.Text = "Undo changes";
-                    undo.ID = "btnUndo-" + i;
+                    undo.ID = "btnUndo" + i;
                     undo.Click += new EventHandler(btnevent_Undo);
                     phOrders.Controls.Add(undo);
                 }
@@ -60,42 +60,45 @@ namespace OrderController
 
         protected void btnevent_Save(object sender, EventArgs e)
         {
+            bool error = false;
             int id = Convert.ToInt32(Request.QueryString["id"]);
             List<Order> OrderList = JsonConvert.DeserializeObject<List<Order>>(Session["orders"].ToString());
             Order order = OrderList.Find(o => o.id == id);
 
-
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data\TextFile2.txt");
-            File.WriteAllText(path, JsonConvert.SerializeObject(OrderList));
-
             int orderIndex = OrderList.IndexOf(OrderList.Find(o => o.id == id));
-            Order updated = new Order(order);
-            updated.providerName = tbProvider.Text;
-            updated.description = tbDescription.Text;
-            updated.manager = tbManager.Text;
-            updated.quantity = Convert.ToInt32(tbQuantity.Text);
-            updated.amount = Convert.ToInt32(tbAmount.Text);
+            
+                Order updated = new Order(order);
+                updated.providerName = tbProvider.Text;
+                updated.description = tbDescription.Text;
+                updated.manager = tbManager.Text;
+            try
+            {
+                updated.quantity = Convert.ToInt32(tbQuantity.Text);
+                updated.amount = Convert.ToInt32(tbAmount.Text);
+            }
+            catch
+            {
+                Label warning = new Label();
+                warning.Text = @"<p style='color: red'>"+ "Integers, please." +"</p>";
+                phError.Controls.Add(warning);
+                error = true;
+            }
 
-            string path2 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data\TextFile3.txt");
-            File.WriteAllText(path2, tbProvider.Text);
-
-            if (order != null)
+            if(!error)
             {
                 updated.modificationData.Add(new Modification(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss"), order));
-            }
-            
-            File.AppendAllText(path2, JsonConvert.SerializeObject(OrderList));
 
-            OrderList.RemoveAt(orderIndex);
-            OrderList.Insert(orderIndex, updated);
-            Session["orders"] = JsonConvert.SerializeObject(OrderList);
-            Response.Redirect("Default.aspx");
+                OrderList.RemoveAt(orderIndex);
+                OrderList.Insert(orderIndex, updated);
+                Session["orders"] = JsonConvert.SerializeObject(OrderList);
+                Response.Redirect("Default.aspx");
+            }
         }
 
         protected void btnevent_Undo(object sender, EventArgs e)
         {
             Button senderButton = sender as Button;
-            int undoNum = Convert.ToInt32(senderButton.ID.Split('-')[1]);
+            int undoNum = Convert.ToInt32(senderButton.ID.Replace("btnUndo",""));
 
             int id = Convert.ToInt32(Request.QueryString["id"]);
             List<Order> OrderList = JsonConvert.DeserializeObject<List<Order>>(Session["orders"].ToString());

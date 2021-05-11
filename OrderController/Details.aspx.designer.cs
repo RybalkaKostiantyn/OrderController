@@ -13,13 +13,13 @@ namespace OrderController {
     public partial class Details {
         
         /// <summary>
-        /// Label1 элемент управления.
+        /// lbProvider элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label Label1;
+        protected global::System.Web.UI.WebControls.Label lbProvider;
         
         /// <summary>
         /// tbProvider элемент управления.
@@ -31,13 +31,13 @@ namespace OrderController {
         protected global::System.Web.UI.WebControls.TextBox tbProvider;
         
         /// <summary>
-        /// Label2 элемент управления.
+        /// lbDescription элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label Label2;
+        protected global::System.Web.UI.WebControls.Label lbDescription;
         
         /// <summary>
         /// tbDescription элемент управления.
@@ -49,13 +49,13 @@ namespace OrderController {
         protected global::System.Web.UI.WebControls.TextBox tbDescription;
         
         /// <summary>
-        /// Label3 элемент управления.
+        /// lbManager элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label Label3;
+        protected global::System.Web.UI.WebControls.Label lbManager;
         
         /// <summary>
         /// tbManager элемент управления.
@@ -67,13 +67,13 @@ namespace OrderController {
         protected global::System.Web.UI.WebControls.TextBox tbManager;
         
         /// <summary>
-        /// Label4 элемент управления.
+        /// lbQuantity элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label Label4;
+        protected global::System.Web.UI.WebControls.Label lbQuantity;
         
         /// <summary>
         /// tbQuantity элемент управления.
@@ -85,13 +85,13 @@ namespace OrderController {
         protected global::System.Web.UI.WebControls.TextBox tbQuantity;
         
         /// <summary>
-        /// Label5 элемент управления.
+        /// lbAmount элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label Label5;
+        protected global::System.Web.UI.WebControls.Label lbAmount;
         
         /// <summary>
         /// tbAmount элемент управления.
@@ -101,6 +101,15 @@ namespace OrderController {
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox tbAmount;
+        
+        /// <summary>
+        /// phError элемент управления.
+        /// </summary>
+        /// <remarks>
+        /// Автоматически создаваемое поле.
+        /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.PlaceHolder phError;
         
         /// <summary>
         /// phOrders элемент управления.

@@ -27,7 +27,7 @@ namespace OrderController.Models
             providerName = p;
             description = d;
             creationData = c;
-            modificationData = new List<Modification>();
+            //modificationData = new List<Modification>(); его в том месте где они нужны
             manager = ma;
             quantity = q;
             amount = a;

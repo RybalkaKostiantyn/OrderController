@@ -43,7 +43,7 @@ namespace OrderController
 
                         TableCell btncell = new TableCell();
                         Button btn = new Button();
-                        btn.ID = "btnEdit-" + order.id;
+                        btn.ID = "btnEdit" + order.id;
                         btn.Text = "Edit";
                         btn.Click += new EventHandler(btnevent_Click);
 
@@ -62,7 +62,7 @@ namespace OrderController
         protected void btnevent_Click(object sender, EventArgs e)
         {
             Button senderButton = sender as Button;
-            string id = senderButton.ID.Split('-')[1];
+            string id = senderButton.ID.Replace("btnEdit","");
             Response.Redirect("Details.aspx?id=" + id);
         }
     }

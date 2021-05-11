@@ -3,7 +3,9 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
     <div class="jumbotron">
-        <h1>Orders</h1>
+        <h1>
+            <asp:Label ID="lbHeader" runat="server" Text="Orders"></asp:Label>
+        </h1>
 
         <asp:TextBox ID="tbSearch" runat="server" Width="200px"></asp:TextBox>
         <asp:Button ID="btnSearch" runat="server" OnClick="btnSearch_Click" Text="Search" />
@@ -11,7 +13,7 @@
 
         <asp:Label ID="Label1" runat="server" Text="Show on page: "></asp:Label>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <asp:RadioButtonList ID="RadioButtonList1" runat="server" AutoPostBack="True" OnSelectedIndexChanged="RadioButtonList1_SelectedIndexChanged">
+        <asp:RadioButtonList ID="rblPageSize" runat="server" AutoPostBack="True" OnSelectedIndexChanged="RadioButtonList1_SelectedIndexChanged">
                 <asp:ListItem>5</asp:ListItem>
                 <asp:ListItem>10</asp:ListItem>
                 <asp:ListItem>25</asp:ListItem>

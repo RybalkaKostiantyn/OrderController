@@ -13,6 +13,15 @@ namespace OrderController {
     public partial class _Default {
         
         /// <summary>
+        /// lbHeader элемент управления.
+        /// </summary>
+        /// <remarks>
+        /// Автоматически создаваемое поле.
+        /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lbHeader;
+        
+        /// <summary>
         /// tbSearch элемент управления.
         /// </summary>
         /// <remarks>
@@ -40,13 +49,13 @@ namespace OrderController {
         protected global::System.Web.UI.WebControls.Label Label1;
         
         /// <summary>
-        /// RadioButtonList1 элемент управления.
+        /// rblPageSize элемент управления.
         /// </summary>
         /// <remarks>
         /// Автоматически создаваемое поле.
         /// Для изменения переместите объявление поля из файла конструктора в файл кода программной части.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.RadioButtonList RadioButtonList1;
+        protected global::System.Web.UI.WebControls.RadioButtonList rblPageSize;
         
         /// <summary>
         /// TableOrders элемент управления.
