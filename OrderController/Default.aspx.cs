@@ -12,7 +12,6 @@ using System.Web.UI.WebControls;
 
 namespace OrderController
 {
-    //добавить обработку ошибок, ввести tryPage. В каком классе, методе, месте произошла ошибка. Возможно входные параметры в Data. Error Handling - логи. Serilog. UseTorBllCommon
     public partial class _Default : Page
     {
         private List<Order> Orders = new List<Order>();
@@ -58,7 +57,7 @@ namespace OrderController
                 }
 
                 int pageSize = 5;
-                if (Session["pageSize"] != null && !IsPostBack) //без page, page size записать в property (совет),
+                if (Session["pageSize"] != null && !IsPostBack)
                 {
                     int radiobutton = (int)Session["pageSize"];
                     rblPageSize.Items[radiobutton].Selected = true;
@@ -103,7 +102,7 @@ namespace OrderController
 
                         Button sort = new Button();
                         sort.Text = prop.Name.ToString();
-                        sort.ID = "btnSort" + sort.Text; //специальные символы не нужны, текст запихни в Тэг
+                        sort.ID = "btnSort" + sort.Text;
                         sort.Click += new EventHandler(btnevent_Sort);
 
                         headCell.Controls.Add(sort);
@@ -122,18 +121,6 @@ namespace OrderController
                     {
                         tableRow.BackColor = Color.Aquamarine;
                     }
-
-                    /*
-                    foreach (PropertyInfo prop in props)
-                    {
-                        object PropValue = prop.GetValue(Orders[i], null);
-                        if (!(PropValue is IList<Modification>))
-                        {
-                            TableCell cell = new TableCell();
-                            cell.Controls.Add(new LiteralControl(PropValue.ToString()));
-                            tableRow.Cells.Add(cell);
-                        }
-                    }*/
                     TableCell cell = new TableCell();
                     cell.Controls.Add(new LiteralControl(Orders[i].id.ToString()));
                     tableRow.Cells.Add(cell);
