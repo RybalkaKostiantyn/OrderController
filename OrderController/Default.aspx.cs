@@ -2,6 +2,8 @@
 using OrderController.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -12,15 +14,19 @@ using System.Web.UI.WebControls;
 
 namespace OrderController
 {
+    /*
+     1 метод 1 скрин! В отдельные методы закинь или в region закинуть
+     branches
+        file/Database
+         */
+
     public partial class _Default : Page
     {
-        private List<Order> Orders = new List<Order>();
-        private string redirect = "Default.aspx?";
-        private string sortBy = "id";
-        string path = "none";
-        protected void Page_Load(object sender, EventArgs e)
+
+        string Verify()
         {
-            bool error = false;
+            string errorText = "";
+            string connString = @"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = OrdersDB; Integrated Security = True";
             try
             {
                 if (Session["orders"] != null)
@@ -29,46 +35,121 @@ namespace OrderController
                 }
                 else
                 {
-                    path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data\OrdersDBFile.txt");
-                    Orders = JsonConvert.DeserializeObject<List<Order>>(File.ReadAllText(path));
+                    string sql = "SELECT * FROM OrderTable";
 
-                    Session["orders"] = JsonConvert.SerializeObject(Orders);
+                    using (SqlConnection conn = new SqlConnection(connString))
+                    {
+                        conn.Open();
+
+                        SqlCommand cmd = new SqlCommand(sql, conn);
+                        var rdr = cmd.ExecuteReader();
+
+                        conn.Close();
+                    }
                 }
             }
             catch
             {
-                lbHeader.Text = "Куда-то делся документ с заказами, без него работа невозможна";
-                
-                string errorPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data\Error " + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".txt");
+                errorText += "Database not found" + '\n' + "Searched adress: " + connString + '\n' + '\n';
+            }
+            if (Request["page"] != null)
+            {
+                try
+                {
+                    page = Convert.ToInt32(Request["page"]);
+                }
+                catch
+                {
+                    errorText += "Page number (pagination) can't be converted to Int" + '\n' + "Request['page']: " + Request["page"] + '\n' + '\n';
+                }
+            }
 
-                string errorText = "File not found" + '\n' + "Searched adress: " + path;
-                
-                File.WriteAllText(errorPath, errorText);
+            if (Session["pageSize"] != null)
+            {
+                try
+                {
+                    int radiobutton = (int)Session["pageSize"];
+                    rblPageSize.Items[radiobutton].Selected = true;
+                }
+                catch
+                {
+                    errorText += "Var PageSize (pagination) can't be converted to Int" + '\n' + "Request['pageSize']: " + Request["pageSize"] + '\n' + '\n';
+                }
+            }
 
+            return errorText;
+        }
+
+        private List<Order> Orders = new List<Order>();
+        private string redirect = "Default.aspx?";
+        private string sortBy = "id";
+        string path = "none";
+        int page = 0;
+        int pageSize = 5;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            bool error = false;
+            string errorPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data\Error " + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".txt");
+            string errorText = Verify();
+
+            if (errorText != "")
+            {
                 error = true;
             }
 
-            if(!error)
+            if (!error)
             {
-                int page = 0;
-                if (Request.QueryString["page"] != null)
+                if (Session["orders"] != null)
                 {
-                    page = Convert.ToInt32(Request.QueryString["page"]);
+                    Orders = JsonConvert.DeserializeObject<List<Order>>(Session["orders"].ToString());
                 }
+                else
+                {
+                    string connString = @"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = OrdersDB; Integrated Security = True";
+                    string sql = "SELECT * FROM OrderTable";
+                    
+                    using (SqlConnection conn = new SqlConnection(connString))
+                    {
+                        conn.Open();
 
-                int pageSize = 5;
+                        SqlCommand cmd = new SqlCommand(sql, conn);
+                        var rdr = cmd.ExecuteReader();
+
+                        while (rdr.Read())
+                        {
+                            Orders.Add(new Order(
+                                Convert.ToInt32(rdr[0]),
+                                rdr[1].ToString(),
+                                rdr[2].ToString(),
+                                rdr[3].ToString(),
+                                rdr[4].ToString(),
+                                Convert.ToInt32(rdr[5]),
+                                Convert.ToInt32(rdr[6]),
+                                rdr[7].ToString()
+                                ));
+                        }
+                    }
+
+
+                    Session["orders"] = JsonConvert.SerializeObject(Orders);
+                }
+                if (Request["page"] != null)
+                {
+                    page = Convert.ToInt32(Request["page"]);
+                }
                 if (Session["pageSize"] != null && !IsPostBack)
                 {
                     int radiobutton = (int)Session["pageSize"];
                     rblPageSize.Items[radiobutton].Selected = true;
                 }
+
+
                 if (rblPageSize.SelectedItem != null)
                 {
                     pageSize = Convert.ToInt32(rblPageSize.SelectedItem.Text);
                 }
                 int pageStart = page * pageSize;
                 int pageFinish = pageStart + pageSize;
-
 
                 if (Session["sortBy"] != null)
                 {
@@ -115,9 +196,8 @@ namespace OrderController
 
                 for (int i = pageStart; i < Orders.Count && i < pageFinish; i++)
                 {
-
                     TableRow tableRow = new TableRow();
-                    if (Orders[i].modificationData.Count > 0)
+                    if (Orders[i].modificationData != null && Orders[i].modificationData.Count > 0)
                     {
                         tableRow.BackColor = Color.Aquamarine;
                     }
@@ -201,20 +281,52 @@ namespace OrderController
                 lbQuantity.Text += totalQuantity;
                 lbAmount.Text += totalAmount;
             }
+            else
+            {
+                lbHeader.Text = "ERROR!!!";
+
+                File.WriteAllText(errorPath, errorText);
+            }
         }
 
         protected void btnevent_SaveToFile(object sender, EventArgs e)
         {
-            foreach(Order order in Orders)
+            foreach (Order order in Orders)
             {
                 order.modificationData = new List<Modification>();
             }
             string text = JsonConvert.SerializeObject(Orders);
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data\OrdersDBFile.txt");
 
             Session["orders"] = text;
 
-            File.WriteAllText(path, text);
+            string connString = @"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = OrdersDB; Integrated Security = True";
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                conn.Open();
+                foreach (Order order in Orders)
+                {
+                    string sql = "UPDATE OrderTable SET providerName = @providerName" + 
+                        ", description = @description" +
+                        ", creationData = @creationData" +
+                        ", manager = @manager" +
+                        ", quantity = @quantity" +
+                        ", amount = @amount" +
+                        ", region = @region" +
+                        " WHERE id = @id;";
+                    SqlCommand cmd = new SqlCommand(sql, conn);
+                    cmd.Parameters.AddWithValue("@providerName", order.providerName);
+                    cmd.Parameters.AddWithValue("@description", order.description);
+                    cmd.Parameters.AddWithValue("@creationData", order.creationData);
+                    cmd.Parameters.AddWithValue("@manager", order.manager);
+                    cmd.Parameters.AddWithValue("@quantity", order.quantity);
+                    cmd.Parameters.AddWithValue("@amount", order.amount);
+                    cmd.Parameters.AddWithValue("@region", order.region);
+                    cmd.Parameters.AddWithValue("@id", order.id);
+                    cmd.ExecuteNonQuery();
+                }
+                conn.Close();
+            }
 
             Response.Redirect(HttpContext.Current.Request.Url.AbsoluteUri);
         }
@@ -222,7 +334,7 @@ namespace OrderController
         protected void btnevent_Edit(object sender, EventArgs e)
         {
             Button senderButton = sender as Button;
-            string id = senderButton.ID.Replace("btnEdit","");
+            string id = senderButton.ID.Replace("btnEdit", "");
             Response.Redirect("Details.aspx?id=" + id);
         }
 
@@ -230,7 +342,7 @@ namespace OrderController
         {
             Button senderButton = sender as Button;
             string property = senderButton.Text;
-            if(Session["sortBy"] != null && Session["sortBy"].ToString() == property)
+            if (Session["sortBy"] != null && Session["sortBy"].ToString() == property)
             {
                 Session["sortBy"] = property + "-descending";
             }
@@ -238,7 +350,7 @@ namespace OrderController
             {
                 Session["sortBy"] = property;
             }
-            
+
             Response.Redirect(HttpContext.Current.Request.Url.AbsoluteUri);
         }
 
@@ -277,9 +389,9 @@ namespace OrderController
             {
                 foreach (PropertyInfo prop in props)
                 {
-                    if(prop.GetValue(order,null).ToString() == tbSearch.Text)
+                    if (prop.GetValue(order, null).ToString() == tbSearch.Text)
                     {
-                        if(!Searched.Any(o => o.id == order.id))
+                        if (!Searched.Any(o => o.id == order.id))
                         {
                             Searched.Add(order);
                         }
