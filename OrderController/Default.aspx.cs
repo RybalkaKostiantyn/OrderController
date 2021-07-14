@@ -27,8 +27,9 @@ namespace OrderController
         {
             string errorText = "";
             string connString = @"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = OrdersDB; Integrated Security = True";
-            try
+            /*try
             {
+                
                 if (Session["orders"] != null)
                 {
                     Orders = JsonConvert.DeserializeObject<List<Order>>(Session["orders"].ToString());
@@ -51,7 +52,7 @@ namespace OrderController
             catch
             {
                 errorText += "Database not found" + '\n' + "Searched adress: " + connString + '\n' + '\n';
-            }
+            }*/
             if (Request["page"] != null)
             {
                 try
@@ -82,7 +83,7 @@ namespace OrderController
 
         private List<Order> Orders = new List<Order>();
         private string redirect = "Default.aspx?";
-        private string sortBy = "id";
+        private string sortBy;
         string path = "none";
         int page = 0;
         int pageSize = 5;
@@ -99,40 +100,6 @@ namespace OrderController
 
             if (!error)
             {
-                if (Session["orders"] != null)
-                {
-                    Orders = JsonConvert.DeserializeObject<List<Order>>(Session["orders"].ToString());
-                }
-                else
-                {
-                    string connString = @"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = OrdersDB; Integrated Security = True";
-                    string sql = "SELECT * FROM OrderTable";
-                    
-                    using (SqlConnection conn = new SqlConnection(connString))
-                    {
-                        conn.Open();
-
-                        SqlCommand cmd = new SqlCommand(sql, conn);
-                        var rdr = cmd.ExecuteReader();
-
-                        while (rdr.Read())
-                        {
-                            Orders.Add(new Order(
-                                Convert.ToInt32(rdr[0]),
-                                rdr[1].ToString(),
-                                rdr[2].ToString(),
-                                rdr[3].ToString(),
-                                rdr[4].ToString(),
-                                Convert.ToInt32(rdr[5]),
-                                Convert.ToInt32(rdr[6]),
-                                rdr[7].ToString()
-                                ));
-                        }
-                    }
-
-
-                    Session["orders"] = JsonConvert.SerializeObject(Orders);
-                }
                 if (Request["page"] != null)
                 {
                     page = Convert.ToInt32(Request["page"]);
@@ -150,14 +117,60 @@ namespace OrderController
                 }
                 int pageStart = page * pageSize;
                 int pageFinish = pageStart + pageSize;
+                
+                
+                    string connString = @"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = OrdersDB; Integrated Security = True";
+                    if(sortBy == null)
+                    {
+                        sortBy = "id";
+                    }
+                    if (Session["sortBy"] != null)
+                    {
+                        sortBy = Session["sortBy"].ToString();
+                    }
 
-                if (Session["sortBy"] != null)
+                string sql = "SELECT * FROM OrderTable ORDER BY " +
+                    sortBy +
+                    " OFFSET @pageStart ROWS " +
+                    "FETCH NEXT @pageSize ROWS ONLY";
+
+                using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    sortBy = Session["sortBy"].ToString();
+                    conn.Open();
+
+                    SqlCommand cmd = new SqlCommand(sql, conn);
+                    cmd.Parameters.AddWithValue("@pageStart", page * pageSize);
+                    cmd.Parameters.AddWithValue("@pageSize", pageSize * 2);
+                    cmd.Parameters.AddWithValue("@sortBy", sortBy);
+                    var rdr = cmd.ExecuteReader();
+
+                    while (rdr.Read())
+                    {
+                        Order or = new Order(
+                                Convert.ToInt32(rdr[0]),
+                                rdr[1].ToString(),
+                                rdr[2].ToString(),
+                                rdr[3].ToString(),
+                                rdr[4].ToString(),
+                                Convert.ToInt32(rdr[5]),
+                                Convert.ToInt32(rdr[6]),
+                                rdr[7].ToString()
+                                );
+                        if (!Orders.Any(o => o.id == or.id))
+                        {
+                            Orders.Add(or);
+                        }
+                    }
                 }
+                    
+
+                    Session["orders"] = JsonConvert.SerializeObject(Orders);
+                
+
+                
 
                 List<PropertyInfo> props = new List<PropertyInfo>(Orders[0].GetType().GetProperties());
-
+                
                 foreach (PropertyInfo prop in props)
                 {
                     if (!(prop.GetValue(Orders[0], null) is IList<Modification>) && sortBy == prop.Name.ToString())
@@ -165,9 +178,9 @@ namespace OrderController
                         Orders = Orders.OrderBy(o => o.GetType().GetProperty(sortBy).GetValue(o, null)).ToList();
                         Session["orders"] = JsonConvert.SerializeObject(Orders);
                     }
-                    else if (!(prop.GetValue(Orders[0], null) is IList<Modification>) && sortBy.Split('-')[0] == prop.Name.ToString())
+                    else if (!(prop.GetValue(Orders[0], null) is IList<Modification>) && sortBy.Split(' ')[0] == prop.Name.ToString())
                     {
-                        Orders = Orders.OrderByDescending(o => o.GetType().GetProperty(sortBy.Split('-')[0]).GetValue(o, null)).ToList();
+                        Orders = Orders.OrderByDescending(o => o.GetType().GetProperty(sortBy.Split(' ')[0]).GetValue(o, null)).ToList();
                         Session["orders"] = JsonConvert.SerializeObject(Orders);
                     }
                 }
@@ -177,7 +190,7 @@ namespace OrderController
 
                 foreach (PropertyInfo prop in props)
                 {
-                    if (!(prop.GetValue(Orders[0], null) is IList<Modification>))
+                    if (!(prop.Name.ToString() == "modificationData"))
                     {
                         TableCell headCell = new TableCell();
 
@@ -247,7 +260,7 @@ namespace OrderController
                 Button btnSaveOrders = new Button();
                 btnSaveOrders.Text = "Save orders to file";
                 btnSaveOrders.ID = "btnSaveOrders";
-                btnSaveOrders.Click += new EventHandler(btnevent_SaveToFile);
+                btnSaveOrders.Click += new EventHandler(btnevent_SaveToDB);
                 phOrders.Controls.Add(btnSaveOrders);
 
                 Button prev = new Button();
@@ -289,7 +302,7 @@ namespace OrderController
             }
         }
 
-        protected void btnevent_SaveToFile(object sender, EventArgs e)
+        protected void btnevent_SaveToDB(object sender, EventArgs e)
         {
             foreach (Order order in Orders)
             {
@@ -344,7 +357,7 @@ namespace OrderController
             string property = senderButton.Text;
             if (Session["sortBy"] != null && Session["sortBy"].ToString() == property)
             {
-                Session["sortBy"] = property + "-descending";
+                Session["sortBy"] = property + " DESC";
             }
             else
             {

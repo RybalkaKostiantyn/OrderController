@@ -14,7 +14,7 @@ namespace OrderController
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            
             if (Session["orders"] != null)
             {
                 int id = Convert.ToInt32(Request.QueryString["id"]);
@@ -36,20 +36,23 @@ namespace OrderController
                 btn.ID = "btnSave";
                 btn.Click += new EventHandler(btnevent_Save);
                 phOrders.Controls.Add(btn);
-                
-                for(int i = order.modificationData.Count-1; i >= 0; i--)
-                {
-                    Label lb = new Label();
-                    lb.Text = "<p>"+ order.modificationData[i].modTime + ") provider: " + order.modificationData[i].providerName +"</p>"
-                        + "<p>" + order.modificationData[i].description + "</p>"
-                        + "<p>" + "quantity: " + order.modificationData[i].quantity + ", amount: " + order.modificationData[i].amount + "$</p>";
-                    phOrders.Controls.Add(lb);
 
-                    Button undo = new Button();
-                    undo.Text = "Undo changes";
-                    undo.ID = "btnUndo" + i;
-                    undo.Click += new EventHandler(btnevent_Undo);
-                    phOrders.Controls.Add(undo);
+                if (order.modificationData != null)
+                {
+                    for (int i = order.modificationData.Count - 1; i >= 0; i--)
+                    {
+                        Label lb = new Label();
+                        lb.Text = "<p>" + order.modificationData[i].modTime + ") provider: " + order.modificationData[i].providerName + "</p>"
+                            + "<p>" + order.modificationData[i].description + "</p>"
+                            + "<p>" + "quantity: " + order.modificationData[i].quantity + ", amount: " + order.modificationData[i].amount + "$</p>";
+                        phOrders.Controls.Add(lb);
+
+                        Button undo = new Button();
+                        undo.Text = "Undo changes";
+                        undo.ID = "btnUndo" + i;
+                        undo.Click += new EventHandler(btnevent_Undo);
+                        phOrders.Controls.Add(undo);
+                    }
                 }
             }
             else
@@ -86,6 +89,10 @@ namespace OrderController
 
             if(!error)
             {
+                if (updated.modificationData == null)
+                {
+                    updated.modificationData = new List<Modification>();
+                }
                 updated.modificationData.Add(new Modification(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss"), order));
 
                 OrderList.RemoveAt(orderIndex);
